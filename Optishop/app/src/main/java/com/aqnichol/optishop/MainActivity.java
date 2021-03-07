@@ -63,8 +63,7 @@ public class MainActivity extends AppCompatActivity {
                         return setupLoadingPage();
                     }
                 } else if (host.equals("error.optishop.us")) {
-                    Log.d("optishop", "loading error page");
-                    // TODO: redirect to an error page.
+                    return setupErrorPage();
                 }
                 return null;
             }
@@ -80,8 +79,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private WebResourceResponse setupLoadingPage() {
+        return assetPage("loading.html");
+    }
+
+    private WebResourceResponse setupErrorPage() {
+        return assetPage("error.html");
+    }
+
+    private WebResourceResponse assetPage(String name) {
         try {
-            InputStream in = getAssets().open("loading.html");
+            InputStream in = getAssets().open(name);
             return new WebResourceResponse("text/html", "utf-8", 200,
                     "OK", new HashMap<String,String>(), in);
         } catch (IOException e) {

@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Optishop</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <style type="text/css">
+            body {
+                background-color: #f0f0f0;
+                font-family: sans-serif;
+                margin: 0;
+                padding: 0;
+            }
+
+            #general-error {
+                position: absolute;
+                left: calc(50% - 150px);
+                top: calc(50% - 150px);
+                width: 300px;
+                height: 300px;
+                padding: 150px 16px 8px 16px;
+                box-sizing: border-box;
+                background-color: white;
+                box-shadow: 0 0 7px 0 rgba(0, 0, 0, 0.4);
+
+                text-align: center;
+                color: #500;
+            }
+
+            #general-error .error-image {
+                display: block;
+                position: absolute;
+                width: 100px;
+                height: 100px;
+                left: calc(50% - 50px);
+                top: 20px;
+            }
+
+            #general-error .close-button {
+                display: block;
+                position: absolute;
+                left: 20px;
+                bottom: 20px;
+                width: calc(100% - 40px);
+                height: 40px;
+                line-height: 40px;
+
+                cursor: pointer;
+                font-size: 20px;
+                color: white;
+                background-color: #65bcd4;
+                text-decoration: none;
+            }
+
+            #general-error .close-button:hover {
+                background-color: #459cb4;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="general-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="error-image" viewBox="0 0 50 50">
+                <path d="M25,2 L2,48 h46 z" fill="#fed22d" stroke-width="3" stroke="black" />
+                <path d="M23,18 h4 v15 h-4 z M23,37 h4 v4 h-4 z" fill="black" stroke-width="2" />
+            </svg>
+            <label>Failed to connect to the server.</label>
+            <a class="close-button" href="https://init.optishop.us">Retry</a>
+        </div>
+    </body>
+</html>
