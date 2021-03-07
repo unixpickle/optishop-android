@@ -2,6 +2,7 @@ package com.aqnichol.optishop;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.webkit.WebResourceRequest;
@@ -27,6 +28,8 @@ import liboptishop.liboptishop.Response;
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
+    private boolean subPage = false;
+    private String startPage = "https://init.optishop.us";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,13 +39,14 @@ public class MainActivity extends AppCompatActivity {
 
         String filesDir = getFilesDir().getAbsolutePath();
 
-        try {
-            copyAssetDir("web-assets", filesDir + "/assets");
-        } catch (IOException e) {
-            Log.e("optishop", "got exception copying files: " + e);
+        if (!getIntent().hasExtra("url")) {
+            try {
+                copyAssetDir("web-assets", filesDir + "/assets");
+            } catch (IOException e) {
+                Log.e("optishop", "got exception copying files: " + e);
+            }
+            Liboptishop.startSetup(filesDir+"/assets", filesDir);
         }
-
-        Liboptishop.startSetup(filesDir+"/assets", filesDir);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -64,8 +68,19 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else if (host.equals("error.optishop.us")) {
                     return setupErrorPage();
+                } else if (host.equals("open.optishop.us")) {
+                    Log.d("optishop", "OPEN: " + request.getUrl());
+                    String path = request.getUrl().getQueryParameter("path");
+                    openNewPage("https://optishop.us" + path);
+                    // Return something arbitrary to prevent fetch() error.
+                    return assetPage("loading.html");
                 }
                 return null;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                view.loadUrl("javascript:window.open=(x)=>{fetch('https://open.optishop.us/?path='+encodeURIComponent(x))}");
             }
         });
 
@@ -75,7 +90,19 @@ public class MainActivity extends AppCompatActivity {
         webViewSettings.setAllowFileAccess(false);
         webViewSettings.setAllowContentAccess(false);
         webViewSettings.setJavaScriptEnabled(true);
-        webView.loadUrl("https://init.optishop.us");
+        webViewSettings.setSupportMultipleWindows(true);
+        webViewSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+        if (getIntent().hasExtra("url")) {
+            webView.loadUrl(getIntent().getStringExtra("url"));
+        } else {
+            webView.loadUrl("https://init.optishop.us");
+        }
+    }
+
+    private void openNewPage(String url) {
+        Intent myIntent = new Intent(MainActivity.this, MainActivity.class);
+        myIntent.putExtra("url", url);
+        MainActivity.this.startActivity(myIntent);
     }
 
     private WebResourceResponse setupLoadingPage() {
