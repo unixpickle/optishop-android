@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Optishop</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="stylesheet" type="text/css" href="style.css">
+    </head>
+    <body>
+        <span id="account-error"></span>
+
+        <form id="account-form" method="POST">
+            <input name="username" placeholder="Username" class="field">
+            <input name="password" type="password" placeholder="Password" class="field">
+            <input type="submit" value="Login" class="submit-button">
+            <span class="fine-print">
+                Don't have an account?
+                <a href="signup">Click here to create an account.</a>
+            </span>
+        </form>
+
+        <script src="js/account_error.js"></script>
+    </body>
+</html>
