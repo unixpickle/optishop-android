@@ -7,11 +7,21 @@ import (
 	"github.com/unixpickle/optishop-server/serverapi"
 )
 
+var settingUp bool
 var setupComplete bool
 var setupError error
 var setupLock sync.Mutex
 
 func StartSetup(assetsDir, storageDir string) {
+	setupLock.Lock()
+	defer setupLock.Unlock()
+
+	if settingUp || setupComplete {
+		return
+	}
+	settingUp = true
+	setupError = nil
+
 	go func() {
 		dbInstance, err := db.NewLocalDB(storageDir)
 		if err != nil {
@@ -41,6 +51,7 @@ func StartSetup(assetsDir, storageDir string) {
 func finishSetup(err error) {
 	setupLock.Lock()
 	defer setupLock.Unlock()
+	settingUp = false
 	if err != nil {
 		setupError = err
 	} else {

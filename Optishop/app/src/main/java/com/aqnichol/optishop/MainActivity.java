@@ -10,6 +10,9 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,30 +42,31 @@ public class MainActivity extends AppCompatActivity {
             Log.e("optishop", "got exception copying files: " + e);
         }
 
-        Log.d("optishop", "running setup");
-
-        if (!Liboptishop.setupComplete() && Liboptishop.setupError() != "") {
-            Liboptishop.startSetup(filesDir+"/assets", filesDir);
-            while (!Liboptishop.setupComplete() && Liboptishop.setupError() != "") {
-                // Wait here.
-            }
-        }
-
-        Log.d("optishop", "done setting up");
+        Liboptishop.startSetup(filesDir+"/assets", filesDir);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view,
                                                               WebResourceRequest request) {
-                if (!request.getUrl().getHost().equals("optishop.us")) {
-                    Log.i("optishop", "shouldn't intercept:" + request.getUrl().getHost());
-                    return null;
+                String host = request.getUrl().getHost();
+                if (host.equals("optishop.us")) {
+                    Response resp = Liboptishop.handleGet(request.getUrl().toString());
+                    return new WebResourceResponse(resp.getContentType(), "utf-8",
+                            (int) resp.getCode(), "OK", new HashMap<String, String>(),
+                            new ByteArrayInputStream(resp.getData()));
+                } else if (host.equals("init.optishop.us")) {
+                    if (request.getUrl().getPath().equals("/status")) {
+                        return setupStatusData();
+                    } else if (request.getUrl().getPath().length() < 2) {
+                        // Retry setup if it failed.
+                        Liboptishop.startSetup(filesDir + "/assets", filesDir);
+                        return setupLoadingPage();
+                    }
+                } else if (host.equals("error.optishop.us")) {
+                    Log.d("optishop", "loading error page");
+                    // TODO: redirect to an error page.
                 }
-                Log.i("optishop", "should intercept: " + request.getUrl().getHost());
-                Response resp = Liboptishop.handleGet(request.getUrl().toString());
-                return new WebResourceResponse(resp.getContentType(), "utf-8",
-                        (int)resp.getCode(), "OK", new HashMap<String,String>(),
-                        new ByteArrayInputStream(resp.getData()));
+                return null;
             }
         });
 
@@ -72,7 +76,30 @@ public class MainActivity extends AppCompatActivity {
         webViewSettings.setAllowFileAccess(false);
         webViewSettings.setAllowContentAccess(false);
         webViewSettings.setJavaScriptEnabled(true);
-        webView.loadUrl("https://optishop.us");
+        webView.loadUrl("https://init.optishop.us");
+    }
+
+    private WebResourceResponse setupLoadingPage() {
+        try {
+            InputStream in = getAssets().open("loading.html");
+            return new WebResourceResponse("text/html", "utf-8", 200,
+                    "OK", new HashMap<String,String>(), in);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private WebResourceResponse setupStatusData() {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.accumulate("error", Liboptishop.setupError());
+            obj.accumulate("complete", Liboptishop.setupComplete());
+            return new WebResourceResponse("application/json", "utf-8",
+                    200, "OK", new HashMap<String, String>(),
+                    new ByteArrayInputStream(obj.toString().getBytes()));
+        } catch (JSONException e) {
+            return null;
+        }
     }
 
     private void copyAssetDir(String assetDir, String targetDir) throws IOException {
